@@ -19,10 +19,10 @@
       --gold-2: rgba(255, 210, 110, 0.10);
       --gold-3: rgba(255, 240, 190, 0.08);
 
-      /* Mesaj konumu (2. mektup üstünde) */
+      /* Mesajın 2. mektup üzerindeki konumu */
       --msg-top: 50%;
       --msg-left: 50%;
-      --msg-width: min(70%, 360px);
+      --msg-width: min(72%, 360px);
     }
 
     *{box-sizing:border-box}
@@ -123,14 +123,26 @@
       text-align:center;
 
       font-family:"Marck Script", cursive;
-      font-size: clamp(22px, 4.8vw, 34px);
-      line-height: 1.15;
+      font-size: clamp(18px, 4.4vw, 32px);
+      line-height: 1.12;
 
       color: rgba(60, 30, 18, 0.86);
       text-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(0,0,0,0.18);
 
       mix-blend-mode: multiply;
       filter: saturate(1.05) contrast(1.02);
+    }
+
+    .page-indicator{
+      position:absolute;
+      top: calc(var(--msg-top) + 18%);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: rgba(60,30,18,0.55);
+      font-family: "EB Garamond", serif;
+      user-select:none;
+      pointer-events:none;
     }
 
     .footer{
@@ -149,6 +161,10 @@
       backdrop-filter: blur(6px);
     }
     .mini:active{transform: translateY(1px)}
+    .mini:disabled{
+      opacity:0.5;
+      cursor:default;
+    }
   </style>
 </head>
 
@@ -160,21 +176,21 @@
       <div class="hint" id="hint">Mektuba dokun ✨</div>
 
       <button class="scene" id="scene" aria-label="Mektubu aç">
-        <!-- ✅ Dosya adlarını senin repoya göre düzelttim: SVG -->
         <img id="img1" class="letter letter--front" src="mektup1.svg" alt="Kapalı mektup" draggable="false" />
 
         <div id="reveal" class="reveal" aria-hidden="true">
           <img id="img2" class="letter letter--back" src="mektup2.svg" alt="Açılan mektup" draggable="false" />
           <div class="message" id="message" aria-live="polite"></div>
+          <div class="page-indicator" id="pageIndicator"></div>
         </div>
       </button>
 
       <div class="footer">
-        <button class="mini" id="newMsg" type="button">Yeni mesaj</button>
+        <!-- ✅ “Yeni mesaj” yerine “Devam” -->
+        <button class="mini" id="nextPage" type="button">Devam</button>
         <button class="mini" id="replay" type="button">Tekrar oynat</button>
       </div>
 
-      <!-- ✅ Ses dosyaları repodaki isimlerle uyumlu -->
       <audio id="sndRip" preload="auto" src="yirtilma.mp3"></audio>
       <audio id="sndPaper" preload="auto" src="kagit.mp3"></audio>
     </section>
@@ -187,23 +203,30 @@
     const img1 = document.getElementById("img1");
     const reveal = document.getElementById("reveal");
     const msgEl = document.getElementById("message");
+    const pageIndicator = document.getElementById("pageIndicator");
 
     const sndRip = document.getElementById("sndRip");
     const sndPaper = document.getElementById("sndPaper");
 
-    const btnNew = document.getElementById("newMsg");
+    const btnNext = document.getElementById("nextPage");
     const btnReplay = document.getElementById("replay");
 
     let opened = false;
 
-    const MESSAGES = [
-      "İyi ki doğdun bugün senin günün",
-      "Kalbim seninle hep burada",
-      "Yeni yıl yeni umut seninle güzel",
-      "Kendini seç bugün de",
-      "Bu anı sakla gülümse"
-    ];
+    // ✅ Buraya mesajını yaz (uzunsa otomatik sayfalara böler)
+    const LETTER_TEXT = `
+Sevgilim,
+Yeni bir yıla seninle adım atmanın ne kadar şanslı bir şey olduğunu düşünüyorum. 2025'i seninle geçirmiş olmak, her anını daha anlamlı kıldı.
+Seninle geçen her gün, sıradan anları özel hale getirmeyi öğretti bana. Sabah kahvelerimiz, anlamsız şakalarımız, sessizce yan yana oturuşlarımız... Bunların hepsi benim için dünya kadar değerli.
+Bu yıl sana daha çok gülümsemeler, huzurlu anlar ve kalbin her istediğini diliyorum. Ve tabii ki, daha nice yıllar birlikte geçirmek dileğiyle...
+Seninle olmak, eve dönmek gibi. Güvende, huzurlu ve tamam hissetmek gibi.
+İyi ki varsın. İyi ki benimsin.
+Seni seviyorum,
+`.trim();
 
+    // ---- Metin yardımcıları ----
+
+    // 5 kelimede bir alt satır (taşmayı azaltır)
     function wrapEveryNWords(text, n = 5) {
       const words = text.replace(/\s+/g, " ").trim().split(" ");
       if (words.length <= n) return words.join(" ");
@@ -216,13 +239,46 @@
       return out.join(" ");
     }
 
-    function setRandomMessage() {
-      const raw = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
-      msgEl.innerHTML = wrapEveryNWords(raw, 5);
+    // Mesajı otomatik sayfalara böl (word sayısına göre)
+    // Not: cihazdan cihaza değişebilir; istersen wordsPerPage’i ayarlarız.
+    function paginateByWords(text, wordsPerPage = 40) {
+      const clean = text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
+      const words = clean.split(" ");
+      if (words.length <= wordsPerPage) return [clean];
+
+      const pages = [];
+      for (let i = 0; i < words.length; i += wordsPerPage) {
+        pages.push(words.slice(i, i + wordsPerPage).join(" "));
+      }
+      return pages;
+    }
+
+    // ---- Sayfa sistemi ----
+    let pages = [];
+    let pageIndex = 0;
+
+    function renderPage() {
+      const current = pages[pageIndex] || "";
+      msgEl.innerHTML = wrapEveryNWords(current, 5);
+
+      const total = pages.length;
+      if (total <= 1) {
+        pageIndicator.textContent = "";
+        btnNext.textContent = "Bitti";
+        btnNext.disabled = true;
+        return;
+      }
+
+      pageIndicator.textContent = `${pageIndex + 1} / ${total}`;
+
+      const isLast = pageIndex >= total - 1;
+      btnNext.textContent = isLast ? "Bitti" : "Devam";
+      btnNext.disabled = isLast;
     }
 
     function hardStop(a){ try{ a.pause(); a.currentTime = 0; }catch{} }
 
+    // 1) İlk tık: yırtılma + hemen peşine kısa kağıt (1.8sn)
     function playRipThenPaper() {
       hardStop(sndRip);
       hardStop(sndPaper);
@@ -242,7 +298,6 @@
         const p = sndPaper.play();
         if (p && typeof p.catch === "function") p.catch(()=>{});
 
-        // ✅ Kağıt sesini kısalt: 1.8sn (istersen 1500-2000 arası değiştir)
         setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1800);
       };
 
@@ -250,11 +305,28 @@
       setTimeout(startPaper, 350);
     }
 
+    // 2) Sayfa geçişinde kısa kağıt sesi (1.2sn)
+    function playShortPaper() {
+      hardStop(sndPaper);
+      sndPaper.volume = 0.95;
+
+      const p = sndPaper.play();
+      if (p && typeof p.catch === "function") p.catch(()=>{});
+
+      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1200);
+    }
+
     function openLetter() {
       if (opened) return;
       opened = true;
 
       hint.textContent = "✨";
+
+      // sayfaları hazırla
+      pages = paginateByWords(LETTER_TEXT, 40);
+      pageIndex = 0;
+      renderPage();
+
       playRipThenPaper();
 
       setTimeout(() => {
@@ -264,23 +336,43 @@
       }, 420);
     }
 
+    function nextPage() {
+      if (!opened) return;
+
+      const isLast = pageIndex >= pages.length - 1;
+      if (isLast) return;
+
+      playShortPaper();
+      pageIndex += 1;
+      renderPage();
+    }
+
     function resetAll() {
       opened = false;
       hint.textContent = "Mektuba dokun ✨";
       img1.classList.remove("is-off");
       reveal.classList.remove("is-on");
       reveal.setAttribute("aria-hidden", "true");
+      pageIndicator.textContent = "";
+      msgEl.textContent = "";
+      btnNext.textContent = "Devam";
+      btnNext.disabled = false;
       sndRip.onended = null;
       hardStop(sndRip);
       hardStop(sndPaper);
-      setRandomMessage();
     }
 
     scene.addEventListener("click", openLetter);
-    btnNew.addEventListener("click", (e) => { e.stopPropagation(); setRandomMessage(); });
-    btnReplay.addEventListener("click", (e) => { e.stopPropagation(); resetAll(); });
 
-    setRandomMessage();
+    btnNext.addEventListener("click", (e) => {
+      e.stopPropagation();
+      nextPage();
+    });
+
+    btnReplay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      resetAll();
+    });
   </script>
 </body>
 </html>
