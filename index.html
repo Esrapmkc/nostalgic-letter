@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mektup Açılımı</title>
+
+  <!-- Nostaljik font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --burgundy-1:#1a0208;
+      --burgundy-2:#3a0a16;
+      --burgundy-3:#120107;
+
+      --gold-1: rgba(255, 215, 130, 0.18);
+      --gold-2: rgba(255, 210, 110, 0.10);
+      --gold-3: rgba(255, 240, 190, 0.08);
+
+      /* Mesaj konumu (2. mektup üstünde) */
+      --msg-top: 50%;
+      --msg-left: 50%;
+      --msg-width: min(70%, 360px);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:#f2e9e9;
+      font-family:"EB Garamond", serif;
+      overflow-x:hidden;
+    }
+
+    /* Bordo + altın ışıltı arka plan */
+    .stage{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px 16px;
+
+      background:
+        radial-gradient(1200px 800px at 20% 20%, rgba(255, 220, 150, 0.06), transparent 55%),
+        radial-gradient(900px 700px at 80% 30%, rgba(255, 205, 120, 0.05), transparent 60%),
+        radial-gradient(900px 900px at 40% 85%, rgba(255, 210, 130, 0.04), transparent 60%),
+        linear-gradient(160deg, var(--burgundy-1), var(--burgundy-2) 55%, var(--burgundy-3));
+      position:relative;
+    }
+
+    .sparkles{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 12% 18%, var(--gold-1) 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 62%, var(--gold-2) 0 1.5px, transparent 3px),
+        radial-gradient(circle at 31% 35%, var(--gold-3) 0 1.2px, transparent 3px),
+        radial-gradient(circle at 48% 22%, var(--gold-2) 0 1.4px, transparent 3px),
+        radial-gradient(circle at 63% 58%, var(--gold-1) 0 2px, transparent 3px),
+        radial-gradient(circle at 74% 28%, var(--gold-3) 0 1.2px, transparent 3px),
+        radial-gradient(circle at 86% 66%, var(--gold-2) 0 1.6px, transparent 3px),
+        radial-gradient(circle at 92% 18%, var(--gold-1) 0 1.8px, transparent 3px);
+      opacity:0.85;
+      animation: twinkle 3.8s ease-in-out infinite;
+      filter: blur(0.1px);
+    }
+
+    @keyframes twinkle{
+      0%,100%{opacity:0.55}
+      50%{opacity:0.95}
+    }
+
+    .card{
+      width:min(520px, 100%);
+      position:relative;
+    }
+
+    .hint{
+      text-align:center;
+      font-size:16px;
+      letter-spacing:0.2px;
+      margin-bottom:10px;
+      opacity:0.92;
+      text-shadow:0 2px 12px rgba(0,0,0,0.35);
+    }
+
+    .scene{
+      width:100%;
+      border:0;
+      padding:0;
+      background:transparent;
+      cursor:pointer;
+      position:relative;
+      display:block;
+      touch-action:manipulation;
+    }
+
+    .letter{
+      width:100%;
+      height:auto;
+      display:block;
+      user-select:none;
+      -webkit-user-drag:none;
+      border-radius:16px;
+      box-shadow:
+        0 18px 45px rgba(0,0,0,0.45),
+        0 2px 10px rgba(0,0,0,0.25);
+    }
+
+    .reveal{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      opacity:0;
+      transform: translateY(10px) scale(0.985);
+      pointer-events:none;
+    }
+
+    .reveal.is-on{
+      opacity:1;
+      transform: translateY(0) scale(1);
+      transition: opacity 520ms ease, transform 520ms ease;
+      pointer-events:auto;
+    }
+
+    .letter--front{
+      transition: opacity 420ms ease, transform 420ms ease;
+    }
+    .letter--front.is-off{
+      opacity:0;
+      transform: translateY(8px) scale(0.99);
+    }
+
+    /* Mesaj: kutusuz, direkt görsel üstünde */
+    .message{
+      position:absolute;
+      top: var(--msg-top);
+      left: var(--msg-left);
+      transform: translate(-50%, -50%);
+      width: var(--msg-width);
+      text-align:center;
+
+      font-family:"Marck Script", cursive;
+      font-size: clamp(22px, 4.8vw, 34px);
+      line-height: 1.15;
+
+      color: rgba(60, 30, 18, 0.86);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.12),
+        0 10px 24px rgba(0,0,0,0.18);
+
+      mix-blend-mode: multiply;
+      filter: saturate(1.05) contrast(1.02);
+      padding: 0;
+    }
+
+    .footer{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin-top:12px;
+    }
+
+    .mini{
+      border:1px solid rgba(255, 220, 150, 0.22);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.88);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:14px;
+      backdrop-filter: blur(6px);
+    }
+    .mini:active{transform: translateY(1px)}
+  </style>
+</head>
+
+<body>
+  <main class="stage" aria-label="Mektup açılımı">
+    <div class="sparkles" aria-hidden="true"></div>
+
+    <section class="card" role="application">
+      <div class="hint" id="hint">Mektuba dokun ✨</div>
+
+      <button class="scene" id="scene" aria-label="Mektubu aç">
+        <!-- 1. görsel -->
+        <img id="img1" class="letter letter--front" src="mektup1.png" alt="Kapalı mektup" draggable="false" />
+
+        <!-- 2. görsel + mesaj -->
+        <div id="reveal" class="reveal" aria-hidden="true">
+          <img id="img2" class="letter letter--back" src="mektup2.png" alt="Açılan mektup" draggable="false" />
+          <div class="message" id="message" aria-live="polite"></div>
+        </div>
+      </button>
+
+      <div class="footer">
+        <button class="mini" id="newMsg" type="button">Yeni mesaj</button>
+        <button class="mini" id="replay" type="button">Tekrar oynat</button>
+      </div>
+
+      <!-- Sesler -->
+      <audio id="sndRip" preload="auto" src="yirtilma.mp3"></audio>
+      <audio id="sndPaper" preload="auto" src="kagit.mp3"></audio>
+    </section>
+  </main>
+
+  <script>
+    const scene = document.getElementById("scene");
+    const hint = document.getElementById("hint");
+
+    const img1 = document.getElementById("img1");
+    const reveal = document.getElementById("reveal");
+    const msgEl = document.getElementById("message");
+
+    const sndRip = document.getElementById("sndRip");
+    const sndPaper = document.getElementById("sndPaper");
+
+    const btnNew = document.getElementById("newMsg");
+    const btnReplay = document.getElementById("replay");
+
+    let opened = false;
+
+    const MESSAGES = [
+      "İyi ki doğdun bugün senin günün",
+      "Kalbim seninle hep burada",
+      "Yeni yıl yeni umut seninle güzel",
+      "Kendini seç bugün de",
+      "Bu anı sakla gülümse"
+    ];
+
+    // 5 kelimede bir alt satıra geçsin
+    function wrapEveryNWords(text, n = 5) {
+      const words = text.replace(/\s+/g, " ").trim().split(" ");
+      if (words.length <= n) return words.join(" ");
+      let out = [];
+      for (let i = 0; i < words.length; i++) {
+        out.push(words[i]);
+        const isBreak = (i + 1) % n === 0 && (i + 1) < words.length;
+        if (isBreak) out.push("<br>");
+      }
+      return out.join(" ");
+    }
+
+    function setRandomMessage() {
+      const raw = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+      msgEl.innerHTML = wrapEveryNWords(raw, 5);
+    }
+
+    function hardStop(audioEl) {
+      try { audioEl.pause(); audioEl.currentTime = 0; } catch {}
+    }
+
+    function playRipThenPaper() {
+      hardStop(sndRip);
+      hardStop(sndPaper);
+
+      sndRip.volume = 1.0;
+      sndPaper.volume = 0.95;
+
+      // 1) Yırtılma sesi
+      const ripPlay = sndRip.play();
+      if (ripPlay && typeof ripPlay.catch === "function") {
+        ripPlay.catch(() => {});
+      }
+
+      let paperStarted = false;
+
+      // 2) Kağıt sesi (hemen peşine) + 1-2 sn sonra kes
+      const startPaper = () => {
+        if (paperStarted) return;
+        paperStarted = true;
+
+        const p = sndPaper.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+
+        // ✅ Kağıt sesini kısalt: 1.8sn (istersen 1500-2000 arası oynat)
+        setTimeout(() => {
+          try { sndPaper.pause(); } catch {}
+        }, 1800);
+      };
+
+      // Rip biter bitmez başlat (doğal)
+      sndRip.onended = startPaper;
+
+      // Ama rip dosyası uzun/uyumsuzsa bekletme: 350ms sonra da başlat
+      setTimeout(startPaper, 350);
+    }
+
+    function openLetter() {
+      if (opened) return;
+      opened = true;
+
+      hint.textContent = "✨";
+      scene.setAttribute("aria-label", "Mektup açıldı");
+
+      playRipThenPaper();
+
+      setTimeout(() => {
+        img1.classList.add("is-off");
+        reveal.classList.add("is-on");
+        reveal.setAttribute("aria-hidden", "false");
+      }, 420);
+    }
+
+    function resetAll() {
+      opened = false;
+      hint.textContent = "Mektuba dokun ✨";
+      img1.classList.remove("is-off");
+      reveal.classList.remove("is-on");
+      reveal.setAttribute("aria-hidden", "true");
+      sndRip.onended = null;
+      hardStop(sndRip);
+      hardStop(sndPaper);
+      setRandomMessage();
+    }
+
+    scene.addEventListener("click", openLetter);
+
+    btnNew.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setRandomMessage();
+    });
+
+    btnReplay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      resetAll();
+    });
+
+    // İlk mesaj
+    setRandomMessage();
+  </script>
+</body>
+</html>
