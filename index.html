@@ -1,13 +1,19 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mektup Açılımı</title>
+  <title>Letter Reveal</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- ✅ Preload (helps first load feel faster) -->
+  <link rel="preload" href="mektup1.svg" as="image" type="image/svg+xml">
+  <link rel="preload" href="mektup2.svg" as="image" type="image/svg+xml">
+  <link rel="preload" href="yirtilma.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="kagit.mp3" as="audio" type="audio/mpeg">
 
   <style>
     :root{
@@ -19,7 +25,7 @@
       --gold-2: rgba(255, 210, 110, 0.10);
       --gold-3: rgba(255, 240, 190, 0.08);
 
-      /* ✅ Yazının yerleşeceği GÖRÜNMEZ alan (mektubun boş kısmına göre ayarla) */
+      /* ✅ Invisible text frame on the 2nd letter image */
       --frame-top: 52%;
       --frame-left: 50%;
       --frame-width: min(74%, 380px);
@@ -88,7 +94,7 @@
     .letter--front{ transition: opacity 420ms ease, transform 420ms ease; }
     .letter--front.is-off{ opacity:0; transform: translateY(8px) scale(0.99); }
 
-    /* ✅ Yazıyı mektup alanında tutan GÖRÜNMEZ çerçeve (kutucuk yok) */
+    /* Invisible text frame (no box shown) */
     .msg-frame{
       position:absolute;
       top: var(--frame-top);
@@ -96,11 +102,10 @@
       transform: translate(-50%, -50%);
       width: var(--frame-width);
       height: var(--frame-height);
-      overflow:hidden;              /* ✅ taşmayı kes */
+      overflow:hidden;
       pointer-events:none;
     }
 
-    /* ✅ Paragraf görünümü */
     .message{
       font-family:"Marck Script", cursive;
       font-size: clamp(16px, 4.2vw, 28px);
@@ -112,7 +117,6 @@
       text-align:left;
       padding: 2px 2px;
     }
-
     .message p{ margin: 0 0 10px 0; }
     .message p:last-child{ margin-bottom:0; }
 
@@ -138,6 +142,16 @@
     }
     .mini:active{transform: translateY(1px)}
     .mini:disabled{ opacity:0.55; cursor:default; }
+
+    /* Optional: small loading text */
+    .loading{
+      text-align:center;
+      font-size:13px;
+      opacity:0.75;
+      margin-top:8px;
+      display:none;
+    }
+    .loading.on{ display:block; }
   </style>
 </head>
 
@@ -146,15 +160,14 @@
     <div class="sparkles" aria-hidden="true"></div>
 
     <section class="card" role="application">
-      <div class="hint" id="hint">Mektuba dokun ✨</div>
+      <div class="hint" id="hint">Tap the letter ✨</div>
 
-      <button class="scene" id="scene" aria-label="Mektubu aç">
-        <img id="img1" class="letter letter--front" src="mektup1.svg" alt="Kapalı mektup" draggable="false" />
+      <button class="scene" id="scene" aria-label="Open the letter">
+        <img id="img1" class="letter letter--front" src="mektup1.svg" alt="Closed letter" draggable="false" />
 
         <div id="reveal" class="reveal" aria-hidden="true">
-          <img id="img2" class="letter letter--back" src="mektup2.svg" alt="Açılan mektup" draggable="false" />
+          <img id="img2" class="letter letter--back" src="mektup2.svg" alt="Opened letter" draggable="false" />
 
-          <!-- ✅ Yazı alanı -->
           <div class="msg-frame" id="msgFrame">
             <div class="message" id="message" aria-live="polite"></div>
           </div>
@@ -164,9 +177,11 @@
       </button>
 
       <div class="footer">
-        <button class="mini" id="nextPage" type="button">Devam</button>
-        <button class="mini" id="replay" type="button">Tekrar oynat</button>
+        <button class="mini" id="nextPage" type="button">Next</button>
+        <button class="mini" id="replay" type="button">Replay</button>
       </div>
+
+      <div class="loading" id="loading">Loading assets…</div>
 
       <audio id="sndRip" preload="auto" src="yirtilma.mp3"></audio>
       <audio id="sndPaper" preload="auto" src="kagit.mp3"></audio>
@@ -176,6 +191,7 @@
   <script>
     const scene = document.getElementById("scene");
     const hint = document.getElementById("hint");
+    const loading = document.getElementById("loading");
 
     const img1 = document.getElementById("img1");
     const reveal = document.getElementById("reveal");
@@ -192,20 +208,23 @@
 
     let opened = false;
 
-    // ✅ Mesajını buraya yaz (paragraflar arası boş satır bırak)
+    // =========================
+    // ✅ CHANGE YOUR MESSAGE HERE
+    // Just replace the text between the backticks.
+    // Keep blank lines to create paragraphs.
+    // =========================
     const LETTER_TEXT = `
-Sevgilim,
+My love,
 
-Yeni bir yıla seninle adım atmanın ne kadar şanslı bir şey olduğunu düşünüyorum. 2025’i seninle geçirmiş olmak, her anını daha anlamlı kıldı.
+Starting a new year with you feels like the luckiest thing. Sharing 2025 with you made every moment more meaningful.
 
-Seninle geçen her gün, sıradan anları özel hale getirmeyi öğretti bana. Sabah kahvelerimiz, anlamsız şakalarımız, sessizce yan yana oturuşlarımız… Bunların hepsi benim için dünya kadar değerli.
+You taught me how ordinary days can become special — our morning coffees, silly jokes, and even the quiet moments side by side. I treasure them all.
 
-Bu yıl sana daha çok gülümseme, huzurlu anlar ve kalbinin dilediği her şeyi diliyorum. Daha nice yıllar birlikte olmak dileğiyle…
+This year, I wish you more smiles, calm days, and everything your heart truly wants. And of course… many more years together.
 
-Seninle olmak, eve dönmek gibi. Güvende, huzurlu ve tamam hissetmek gibi.
+Being with you feels like coming home — safe, peaceful, and complete.
 
-İyi ki varsın. İyi ki benimsin.
-Seni seviyorum,
+I’m grateful for you. I love you.
     `.trim();
 
     // --- helpers ---
@@ -215,7 +234,6 @@ Seni seviyorum,
       }[m]));
     }
 
-    // Paragraflara böl (boş satır = yeni paragraf)
     function splitParagraphs(text){
       return text
         .split(/\n\s*\n/g)
@@ -227,42 +245,29 @@ Seni seviyorum,
       msgEl.innerHTML = paras.map(p => `<p>${escapeHTML(p)}</p>`).join("");
     }
 
-    // ✅ Paragrafları, çerçeveye sığacak şekilde sayfalara yerleştir
     function paginateToFit(paragraphs){
       const pages = [];
       let current = [];
 
-      // test render için
       const fits = (paras) => {
         renderParagraphs(paras);
         return msgEl.scrollHeight <= msgFrame.clientHeight + 1;
       };
 
-      // Eğer tek paragraf bile sığmıyorsa cümle bazlı bölelim
       const splitIntoSentences = (para) => {
         const parts = para.split(/(?<=[.!?…])\s+/).map(s => s.trim()).filter(Boolean);
         return parts.length ? parts : [para];
       };
 
-      // önce paragraf paragraf doldur
       for (const para of paragraphs){
         const candidate = [...current, para];
-        if (fits(candidate)) {
-          current = candidate;
-          continue;
-        }
+        if (fits(candidate)) { current = candidate; continue; }
 
-        // current doluysa sayfaya at
         if (current.length) pages.push(current);
 
-        // bu paragraf tek başına sığmıyor olabilir -> cümle ile parçala
         current = [];
-        if (fits([para])) {
-          current = [para];
-          continue;
-        }
+        if (fits([para])) { current = [para]; continue; }
 
-        // cümle cümle sığdır
         const sentences = splitIntoSentences(para);
         let temp = [];
         for (const s of sentences){
@@ -300,6 +305,7 @@ Seni seviyorum,
         const p = sndPaper.play();
         if (p && typeof p.catch === "function") p.catch(()=>{});
 
+        // Stop after ~1.8s
         setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1800);
       };
 
@@ -307,14 +313,33 @@ Seni seviyorum,
       setTimeout(startPaper, 350);
     }
 
-    function playShortPaper() {
+    // ✅ Page turn sound: play ONLY from 2.0s to 3.0s
+    async function playPaperSegment(startSec = 2.0, endSec = 3.0) {
       hardStop(sndPaper);
       sndPaper.volume = 0.95;
+
+      try {
+        // Some browsers require metadata loaded before setting currentTime
+        if (sndPaper.readyState < 1) await sndPaper.load();
+      } catch {}
+
+      // Wait until duration is known / seekable
+      const ensureSeekable = () => new Promise((resolve) => {
+        if (sndPaper.readyState >= 2) return resolve();
+        const onCanPlay = () => { sndPaper.removeEventListener("canplay", onCanPlay); resolve(); };
+        sndPaper.addEventListener("canplay", onCanPlay, { once:true });
+        sndPaper.load();
+      });
+
+      await ensureSeekable();
+
+      try { sndPaper.currentTime = startSec; } catch {}
 
       const p = sndPaper.play();
       if (p && typeof p.catch === "function") p.catch(()=>{});
 
-      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1100);
+      const ms = Math.max(0, (endSec - startSec) * 1000);
+      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, ms);
     }
 
     // --- paging ---
@@ -328,14 +353,14 @@ Seni seviyorum,
 
       if (total <= 1){
         pageIndicator.textContent = "";
-        btnNext.textContent = "Bitti";
+        btnNext.textContent = "Finished";
         btnNext.disabled = true;
         return;
       }
 
       pageIndicator.textContent = `${pageIndex + 1} / ${total}`;
       const isLast = pageIndex >= total - 1;
-      btnNext.textContent = isLast ? "Bitti" : "Devam";
+      btnNext.textContent = isLast ? "Finished" : "Next";
       btnNext.disabled = isLast;
     }
 
@@ -358,40 +383,67 @@ Seni seviyorum,
         reveal.classList.add("is-on");
         reveal.setAttribute("aria-hidden", "false");
 
-        // ✅ Çerçeve ölçüsü hazır olunca sayfalara böl
         requestAnimationFrame(() => {
           buildPagesAndShowFirst();
         });
       }, 420);
     }
 
-    function nextPage(){
+    async function nextPage(){
       if (!opened) return;
       const isLast = pageIndex >= pages.length - 1;
       if (isLast) return;
-      playShortPaper();
+
+      // ✅ Play segment 2s -> 3s
+      playPaperSegment(2.0, 3.0);
+
       pageIndex += 1;
       renderPage();
     }
 
     function resetAll(){
       opened = false;
-      hint.textContent = "Mektuba dokun ✨";
+      hint.textContent = "Tap the letter ✨";
       img1.classList.remove("is-off");
       reveal.classList.remove("is-on");
       reveal.setAttribute("aria-hidden", "true");
       pageIndicator.textContent = "";
       msgEl.innerHTML = "";
-      btnNext.textContent = "Devam";
+      btnNext.textContent = "Next";
       btnNext.disabled = false;
       sndRip.onended = null;
       hardStop(sndRip);
       hardStop(sndPaper);
     }
 
+    // ✅ Warm-up assets to reduce “first load feels slow”
+    async function warmUpAssets(){
+      loading.classList.add("on");
+      const urls = ["mektup1.svg","mektup2.svg","yirtilma.mp3","kagit.mp3"];
+
+      // Kick off fetch (best effort)
+      await Promise.allSettled(urls.map(u => fetch(u, { cache: "force-cache" })));
+
+      // Ensure images decode (best effort)
+      const imgA = new Image(); imgA.src = "mektup1.svg";
+      const imgB = new Image(); imgB.src = "mektup2.svg";
+      await Promise.allSettled([
+        imgA.decode?.() ?? Promise.resolve(),
+        imgB.decode?.() ?? Promise.resolve()
+      ]);
+
+      // Ensure audio metadata is ready
+      try { sndRip.load(); sndPaper.load(); } catch {}
+
+      loading.classList.remove("on");
+    }
+
     scene.addEventListener("click", openLetter);
     btnNext.addEventListener("click", (e) => { e.stopPropagation(); nextPage(); });
     btnReplay.addEventListener("click", (e) => { e.stopPropagation(); resetAll(); });
+
+    // Start warming up immediately
+    warmUpAssets();
   </script>
 </body>
 </html>
