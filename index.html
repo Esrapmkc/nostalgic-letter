@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- ✅ Preload (helps first load feel faster) -->
+  <!-- Preload (helps first load feel faster) -->
   <link rel="preload" href="mektup1.svg" as="image" type="image/svg+xml">
   <link rel="preload" href="mektup2.svg" as="image" type="image/svg+xml">
   <link rel="preload" href="yirtilma.mp3" as="audio" type="audio/mpeg">
@@ -25,7 +25,7 @@
       --gold-2: rgba(255, 210, 110, 0.10);
       --gold-3: rgba(255, 240, 190, 0.08);
 
-      /* ✅ Invisible text frame on the 2nd letter image */
+      /* Invisible text frame on the 2nd letter image */
       --frame-top: 52%;
       --frame-left: 50%;
       --frame-width: min(74%, 380px);
@@ -143,7 +143,6 @@
     .mini:active{transform: translateY(1px)}
     .mini:disabled{ opacity:0.55; cursor:default; }
 
-    /* Optional: small loading text */
     .loading{
       text-align:center;
       font-size:13px;
@@ -189,6 +188,11 @@
   </main>
 
   <script>
+    // ✅ Apps Script Web App endpoint
+    const APPS_SCRIPT_ENDPOINT =
+      "https://script.google.com/macros/s/AKfycbzoIszB1N13oP8YDQkcjQaw8tMxi5mQ8CTZUyweYMc5zsqsrzp2pscER39g-WNjuvNemw/exec";
+
+    // DOM
     const scene = document.getElementById("scene");
     const hint = document.getElementById("hint");
     const loading = document.getElementById("loading");
@@ -208,44 +212,39 @@
 
     let opened = false;
 
-    // =========================
-    // ✅ CHANGE YOUR MESSAGE HERE
-    // Just replace the text between the backticks.
-    // Keep blank lines to create paragraphs.
-    // =========================
-    const LETTER_TEXT = `
-My love,
-
-Starting a new year with you feels like the luckiest thing. Sharing 2025 with you made every moment more meaningful.
-
-You taught me how ordinary days can become special — our morning coffees, silly jokes, and even the quiet moments side by side. I treasure them all.
-
-This year, I wish you more smiles, calm days, and everything your heart truly wants. And of course… many more years together.
-
-Being with you feels like coming home — safe, peaceful, and complete.
-
-I’m grateful for you. I love you.
+    // Fallback (when no id=... in URL, or invalid id)
+    const DEFAULT_LETTER_TEXT = `
+Your message will appear here…
     `.trim();
 
-    // --- helpers ---
-    function escapeHTML(str){
-      return str.replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    // Will be replaced by Sheet message if id is valid
+    let LETTER_TEXT = DEFAULT_LETTER_TEXT;
+
+    // -------------------------
+    // Helpers
+    // -------------------------
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;",
       }[m]));
     }
 
-    function splitParagraphs(text){
+    function splitParagraphs(text) {
       return text
         .split(/\n\s*\n/g)
-        .map(p => p.replace(/\s+/g, " ").trim())
+        .map((p) => p.replace(/\s+/g, " ").trim())
         .filter(Boolean);
     }
 
-    function renderParagraphs(paras){
-      msgEl.innerHTML = paras.map(p => `<p>${escapeHTML(p)}</p>`).join("");
+    function renderParagraphs(paras) {
+      msgEl.innerHTML = paras.map((p) => `<p>${escapeHTML(p)}</p>`).join("");
     }
 
-    function paginateToFit(paragraphs){
+    function paginateToFit(paragraphs) {
       const pages = [];
       let current = [];
 
@@ -255,25 +254,34 @@ I’m grateful for you. I love you.
       };
 
       const splitIntoSentences = (para) => {
-        const parts = para.split(/(?<=[.!?…])\s+/).map(s => s.trim()).filter(Boolean);
+        const parts = para
+          .split(/(?<=[.!?…])\s+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
         return parts.length ? parts : [para];
       };
 
-      for (const para of paragraphs){
+      for (const para of paragraphs) {
         const candidate = [...current, para];
-        if (fits(candidate)) { current = candidate; continue; }
+        if (fits(candidate)) {
+          current = candidate;
+          continue;
+        }
 
         if (current.length) pages.push(current);
 
         current = [];
-        if (fits([para])) { current = [para]; continue; }
+        if (fits([para])) {
+          current = [para];
+          continue;
+        }
 
         const sentences = splitIntoSentences(para);
         let temp = [];
-        for (const s of sentences){
+        for (const s of sentences) {
           const cand2 = [...temp, s];
           if (fits(cand2)) temp = cand2;
-          else{
+          else {
             if (temp.length) pages.push(temp);
             temp = [s];
           }
@@ -285,8 +293,10 @@ I’m grateful for you. I love you.
       return pages;
     }
 
-    // --- sound ---
-    function hardStop(a){ try{ a.pause(); a.currentTime = 0; }catch{} }
+    // -------------------------
+    // Sound
+    // -------------------------
+    function hardStop(a) { try { a.pause(); a.currentTime = 0; } catch {} }
 
     function playRipThenPaper() {
       hardStop(sndRip);
@@ -295,7 +305,7 @@ I’m grateful for you. I love you.
       sndPaper.volume = 0.95;
 
       const ripPlay = sndRip.play();
-      if (ripPlay && typeof ripPlay.catch === "function") ripPlay.catch(()=>{});
+      if (ripPlay && typeof ripPlay.catch === "function") ripPlay.catch(() => {});
 
       let paperStarted = false;
       const startPaper = () => {
@@ -303,55 +313,51 @@ I’m grateful for you. I love you.
         paperStarted = true;
 
         const p = sndPaper.play();
-        if (p && typeof p.catch === "function") p.catch(()=>{});
+        if (p && typeof p.catch === "function") p.catch(() => {});
 
-        // Stop after ~1.8s
-        setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1800);
+        // stop after ~1.8s
+        setTimeout(() => { try { sndPaper.pause(); } catch {} }, 1800);
       };
 
       sndRip.onended = startPaper;
       setTimeout(startPaper, 350);
     }
 
-    // ✅ Page turn sound: play ONLY from 2.0s to 3.0s
+    // Page turn sound: play ONLY from 2.0s to 3.0s
     async function playPaperSegment(startSec = 2.0, endSec = 3.0) {
       hardStop(sndPaper);
       sndPaper.volume = 0.95;
 
-      try {
-        // Some browsers require metadata loaded before setting currentTime
-        if (sndPaper.readyState < 1) await sndPaper.load();
-      } catch {}
-
-      // Wait until duration is known / seekable
-      const ensureSeekable = () => new Promise((resolve) => {
-        if (sndPaper.readyState >= 2) return resolve();
-        const onCanPlay = () => { sndPaper.removeEventListener("canplay", onCanPlay); resolve(); };
-        sndPaper.addEventListener("canplay", onCanPlay, { once:true });
-        sndPaper.load();
-      });
+      const ensureSeekable = () =>
+        new Promise((resolve) => {
+          if (sndPaper.readyState >= 2) return resolve();
+          sndPaper.addEventListener("canplay", () => resolve(), { once: true });
+          try { sndPaper.load(); } catch {}
+        });
 
       await ensureSeekable();
 
       try { sndPaper.currentTime = startSec; } catch {}
 
       const p = sndPaper.play();
-      if (p && typeof p.catch === "function") p.catch(()=>{});
+      if (p && typeof p.catch === "function") p.catch(() => {});
 
       const ms = Math.max(0, (endSec - startSec) * 1000);
-      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, ms);
+      setTimeout(() => { try { sndPaper.pause(); } catch {} }, ms);
     }
 
-    // --- paging ---
+    // -------------------------
+    // Paging
+    // -------------------------
     let pages = [];
     let pageIndex = 0;
 
-    function renderPage(){
+    function renderPage() {
       const total = pages.length;
       const paras = pages[pageIndex] || [];
       renderParagraphs(paras);
 
-      if (total <= 1){
+      if (total <= 1) {
         pageIndicator.textContent = "";
         btnNext.textContent = "Finished";
         btnNext.disabled = true;
@@ -364,14 +370,14 @@ I’m grateful for you. I love you.
       btnNext.disabled = isLast;
     }
 
-    function buildPagesAndShowFirst(){
+    function buildPagesAndShowFirst() {
       const paragraphs = splitParagraphs(LETTER_TEXT);
       pages = paginateToFit(paragraphs);
       pageIndex = 0;
       renderPage();
     }
 
-    function openLetter(){
+    function openLetter() {
       if (opened) return;
       opened = true;
 
@@ -389,19 +395,18 @@ I’m grateful for you. I love you.
       }, 420);
     }
 
-    async function nextPage(){
+    function nextPage() {
       if (!opened) return;
       const isLast = pageIndex >= pages.length - 1;
       if (isLast) return;
 
-      // ✅ Play segment 2s -> 3s
       playPaperSegment(2.0, 3.0);
 
       pageIndex += 1;
       renderPage();
     }
 
-    function resetAll(){
+    function resetAll() {
       opened = false;
       hint.textContent = "Tap the letter ✨";
       img1.classList.remove("is-off");
@@ -414,36 +419,71 @@ I’m grateful for you. I love you.
       sndRip.onended = null;
       hardStop(sndRip);
       hardStop(sndPaper);
+
+      // if user replays, rebuild pages from current LETTER_TEXT
+      pages = [];
+      pageIndex = 0;
     }
 
-    // ✅ Warm-up assets to reduce “first load feels slow”
-    async function warmUpAssets(){
+    // -------------------------
+    // Load message from Sheet (JSONP)
+    // -------------------------
+    function getIdFromURL() {
+      return new URLSearchParams(location.search).get("id") || "";
+    }
+
+    // JSONP callback MUST be global
+    window.handleLetterData = function (data) {
+      if (!data || !data.ok) {
+        hint.textContent = "This link is invalid or expired.";
+        LETTER_TEXT = DEFAULT_LETTER_TEXT;
+        return;
+      }
+
+      LETTER_TEXT = (data.message || DEFAULT_LETTER_TEXT).trim();
+      hint.textContent = "Tap the letter ✨";
+    };
+
+    function loadMessageFromSheet() {
+      const id = getIdFromURL().trim();
+      if (!id) return;
+
+      hint.textContent = "Loading your letter…";
+      const s = document.createElement("script");
+      s.src = `${APPS_SCRIPT_ENDPOINT}?id=${encodeURIComponent(id)}&callback=handleLetterData`;
+      s.async = true;
+      document.head.appendChild(s);
+    }
+
+    // -------------------------
+    // Warm-up assets
+    // -------------------------
+    async function warmUpAssets() {
       loading.classList.add("on");
-      const urls = ["mektup1.svg","mektup2.svg","yirtilma.mp3","kagit.mp3"];
+      const urls = ["mektup1.svg", "mektup2.svg", "yirtilma.mp3", "kagit.mp3"];
 
-      // Kick off fetch (best effort)
-      await Promise.allSettled(urls.map(u => fetch(u, { cache: "force-cache" })));
+      await Promise.allSettled(urls.map((u) => fetch(u, { cache: "force-cache" })));
 
-      // Ensure images decode (best effort)
       const imgA = new Image(); imgA.src = "mektup1.svg";
       const imgB = new Image(); imgB.src = "mektup2.svg";
       await Promise.allSettled([
         imgA.decode?.() ?? Promise.resolve(),
-        imgB.decode?.() ?? Promise.resolve()
+        imgB.decode?.() ?? Promise.resolve(),
       ]);
 
-      // Ensure audio metadata is ready
       try { sndRip.load(); sndPaper.load(); } catch {}
-
       loading.classList.remove("on");
     }
 
+    // -------------------------
+    // Init
+    // -------------------------
     scene.addEventListener("click", openLetter);
     btnNext.addEventListener("click", (e) => { e.stopPropagation(); nextPage(); });
     btnReplay.addEventListener("click", (e) => { e.stopPropagation(); resetAll(); });
 
-    // Start warming up immediately
     warmUpAssets();
+    loadMessageFromSheet();
   </script>
 </body>
 </html>
