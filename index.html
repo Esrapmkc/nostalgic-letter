@@ -19,37 +19,28 @@
       --gold-2: rgba(255, 210, 110, 0.10);
       --gold-3: rgba(255, 240, 190, 0.08);
 
-      /* Mesajın 2. mektup üzerindeki konumu */
-      --msg-top: 50%;
-      --msg-left: 50%;
-      --msg-width: min(72%, 360px);
+      /* ✅ Yazının yerleşeceği GÖRÜNMEZ alan (mektubun boş kısmına göre ayarla) */
+      --frame-top: 52%;
+      --frame-left: 50%;
+      --frame-width: min(74%, 380px);
+      --frame-height: 44%;
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0;
-      color:#f2e9e9;
-      font-family:"EB Garamond", serif;
-      overflow-x:hidden;
-    }
+    body{ margin:0; color:#f2e9e9; font-family:"EB Garamond", serif; overflow-x:hidden; }
 
     .stage{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px 16px;
+      min-height:100vh; display:grid; place-items:center; padding:24px 16px; position:relative;
       background:
         radial-gradient(1200px 800px at 20% 20%, rgba(255, 220, 150, 0.06), transparent 55%),
         radial-gradient(900px 700px at 80% 30%, rgba(255, 205, 120, 0.05), transparent 60%),
         radial-gradient(900px 900px at 40% 85%, rgba(255, 210, 130, 0.04), transparent 60%),
         linear-gradient(160deg, var(--burgundy-1), var(--burgundy-2) 55%, var(--burgundy-3));
-      position:relative;
     }
 
     .sparkles{
-      position:absolute; inset:0;
-      pointer-events:none;
+      position:absolute; inset:0; pointer-events:none;
       background:
         radial-gradient(circle at 12% 18%, var(--gold-1) 0 2px, transparent 3px),
         radial-gradient(circle at 22% 62%, var(--gold-2) 0 1.5px, transparent 3px),
@@ -59,8 +50,7 @@
         radial-gradient(circle at 74% 28%, var(--gold-3) 0 1.2px, transparent 3px),
         radial-gradient(circle at 86% 66%, var(--gold-2) 0 1.6px, transparent 3px),
         radial-gradient(circle at 92% 18%, var(--gold-1) 0 1.8px, transparent 3px);
-      opacity:0.85;
-      animation: twinkle 3.8s ease-in-out infinite;
+      opacity:0.85; animation: twinkle 3.8s ease-in-out infinite;
       filter: blur(0.1px);
     }
     @keyframes twinkle{ 0%,100%{opacity:0.55} 50%{opacity:0.95} }
@@ -68,45 +58,29 @@
     .card{ width:min(520px, 100%); position:relative; }
 
     .hint{
-      text-align:center;
-      font-size:16px;
-      margin-bottom:10px;
-      opacity:0.92;
+      text-align:center; font-size:16px; margin-bottom:10px; opacity:0.92;
       text-shadow:0 2px 12px rgba(0,0,0,0.35);
     }
 
     .scene{
-      width:100%;
-      border:0;
-      padding:0;
-      background:transparent;
-      cursor:pointer;
-      position:relative;
-      display:block;
-      touch-action:manipulation;
+      width:100%; border:0; padding:0; background:transparent; cursor:pointer;
+      position:relative; display:block; touch-action:manipulation;
     }
 
     .letter{
-      width:100%;
-      height:auto;
-      display:block;
-      user-select:none;
-      -webkit-user-drag:none;
+      width:100%; height:auto; display:block; user-select:none; -webkit-user-drag:none;
       border-radius:16px;
       box-shadow: 0 18px 45px rgba(0,0,0,0.45), 0 2px 10px rgba(0,0,0,0.25);
       background: rgba(255,255,255,0.02);
     }
 
     .reveal{
-      position:absolute; inset:0;
-      display:grid; place-items:center;
-      opacity:0;
-      transform: translateY(10px) scale(0.985);
+      position:absolute; inset:0; display:grid; place-items:center;
+      opacity:0; transform: translateY(10px) scale(0.985);
       pointer-events:none;
     }
     .reveal.is-on{
-      opacity:1;
-      transform: translateY(0) scale(1);
+      opacity:1; transform: translateY(0) scale(1);
       transition: opacity 520ms ease, transform 520ms ease;
       pointer-events:auto;
     }
@@ -114,28 +88,37 @@
     .letter--front{ transition: opacity 420ms ease, transform 420ms ease; }
     .letter--front.is-off{ opacity:0; transform: translateY(8px) scale(0.99); }
 
-    .message{
+    /* ✅ Yazıyı mektup alanında tutan GÖRÜNMEZ çerçeve (kutucuk yok) */
+    .msg-frame{
       position:absolute;
-      top: var(--msg-top);
-      left: var(--msg-left);
+      top: var(--frame-top);
+      left: var(--frame-left);
       transform: translate(-50%, -50%);
-      width: var(--msg-width);
-      text-align:center;
+      width: var(--frame-width);
+      height: var(--frame-height);
+      overflow:hidden;              /* ✅ taşmayı kes */
+      pointer-events:none;
+    }
 
+    /* ✅ Paragraf görünümü */
+    .message{
       font-family:"Marck Script", cursive;
-      font-size: clamp(18px, 4.4vw, 32px);
-      line-height: 1.12;
-
+      font-size: clamp(16px, 4.2vw, 28px);
+      line-height: 1.18;
       color: rgba(60, 30, 18, 0.86);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(0,0,0,0.18);
-
+      text-shadow: 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.14);
       mix-blend-mode: multiply;
       filter: saturate(1.05) contrast(1.02);
+      text-align:left;
+      padding: 2px 2px;
     }
+
+    .message p{ margin: 0 0 10px 0; }
+    .message p:last-child{ margin-bottom:0; }
 
     .page-indicator{
       position:absolute;
-      top: calc(var(--msg-top) + 18%);
+      top: calc(var(--frame-top) + (var(--frame-height) / 2) + 14px);
       left: 50%;
       transform: translateX(-50%);
       font-size: 14px;
@@ -145,26 +128,16 @@
       pointer-events:none;
     }
 
-    .footer{
-      display:flex; gap:10px;
-      justify-content:center;
-      margin-top:12px;
-    }
+    .footer{ display:flex; gap:10px; justify-content:center; margin-top:12px; }
     .mini{
       border:1px solid rgba(255, 220, 150, 0.22);
       background: rgba(0,0,0,0.18);
       color: rgba(255,255,255,0.88);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-size:14px;
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px;
       backdrop-filter: blur(6px);
     }
     .mini:active{transform: translateY(1px)}
-    .mini:disabled{
-      opacity:0.5;
-      cursor:default;
-    }
+    .mini:disabled{ opacity:0.55; cursor:default; }
   </style>
 </head>
 
@@ -180,13 +153,17 @@
 
         <div id="reveal" class="reveal" aria-hidden="true">
           <img id="img2" class="letter letter--back" src="mektup2.svg" alt="Açılan mektup" draggable="false" />
-          <div class="message" id="message" aria-live="polite"></div>
+
+          <!-- ✅ Yazı alanı -->
+          <div class="msg-frame" id="msgFrame">
+            <div class="message" id="message" aria-live="polite"></div>
+          </div>
+
           <div class="page-indicator" id="pageIndicator"></div>
         </div>
       </button>
 
       <div class="footer">
-        <!-- ✅ “Yeni mesaj” yerine “Devam” -->
         <button class="mini" id="nextPage" type="button">Devam</button>
         <button class="mini" id="replay" type="button">Tekrar oynat</button>
       </div>
@@ -202,6 +179,8 @@
 
     const img1 = document.getElementById("img1");
     const reveal = document.getElementById("reveal");
+
+    const msgFrame = document.getElementById("msgFrame");
     const msgEl = document.getElementById("message");
     const pageIndicator = document.getElementById("pageIndicator");
 
@@ -213,76 +192,100 @@
 
     let opened = false;
 
-    // ✅ Buraya mesajını yaz (uzunsa otomatik sayfalara böler)
+    // ✅ Mesajını buraya yaz (paragraflar arası boş satır bırak)
     const LETTER_TEXT = `
 Sevgilim,
-Yeni bir yıla seninle adım atmanın ne kadar şanslı bir şey olduğunu düşünüyorum. 2025'i seninle geçirmiş olmak, her anını daha anlamlı kıldı.
-Seninle geçen her gün, sıradan anları özel hale getirmeyi öğretti bana. Sabah kahvelerimiz, anlamsız şakalarımız, sessizce yan yana oturuşlarımız... Bunların hepsi benim için dünya kadar değerli.
-Bu yıl sana daha çok gülümsemeler, huzurlu anlar ve kalbin her istediğini diliyorum. Ve tabii ki, daha nice yıllar birlikte geçirmek dileğiyle...
+
+Yeni bir yıla seninle adım atmanın ne kadar şanslı bir şey olduğunu düşünüyorum. 2025’i seninle geçirmiş olmak, her anını daha anlamlı kıldı.
+
+Seninle geçen her gün, sıradan anları özel hale getirmeyi öğretti bana. Sabah kahvelerimiz, anlamsız şakalarımız, sessizce yan yana oturuşlarımız… Bunların hepsi benim için dünya kadar değerli.
+
+Bu yıl sana daha çok gülümseme, huzurlu anlar ve kalbinin dilediği her şeyi diliyorum. Daha nice yıllar birlikte olmak dileğiyle…
+
 Seninle olmak, eve dönmek gibi. Güvende, huzurlu ve tamam hissetmek gibi.
+
 İyi ki varsın. İyi ki benimsin.
 Seni seviyorum,
-`.trim();
+    `.trim();
 
-    // ---- Metin yardımcıları ----
-
-    // 5 kelimede bir alt satır (taşmayı azaltır)
-    function wrapEveryNWords(text, n = 5) {
-      const words = text.replace(/\s+/g, " ").trim().split(" ");
-      if (words.length <= n) return words.join(" ");
-      let out = [];
-      for (let i = 0; i < words.length; i++) {
-        out.push(words[i]);
-        const isBreak = (i + 1) % n === 0 && (i + 1) < words.length;
-        if (isBreak) out.push("<br>");
-      }
-      return out.join(" ");
+    // --- helpers ---
+    function escapeHTML(str){
+      return str.replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
     }
 
-    // Mesajı otomatik sayfalara böl (word sayısına göre)
-    // Not: cihazdan cihaza değişebilir; istersen wordsPerPage’i ayarlarız.
-    function paginateByWords(text, wordsPerPage = 40) {
-      const clean = text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
-      const words = clean.split(" ");
-      if (words.length <= wordsPerPage) return [clean];
+    // Paragraflara böl (boş satır = yeni paragraf)
+    function splitParagraphs(text){
+      return text
+        .split(/\n\s*\n/g)
+        .map(p => p.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+    }
 
+    function renderParagraphs(paras){
+      msgEl.innerHTML = paras.map(p => `<p>${escapeHTML(p)}</p>`).join("");
+    }
+
+    // ✅ Paragrafları, çerçeveye sığacak şekilde sayfalara yerleştir
+    function paginateToFit(paragraphs){
       const pages = [];
-      for (let i = 0; i < words.length; i += wordsPerPage) {
-        pages.push(words.slice(i, i + wordsPerPage).join(" "));
+      let current = [];
+
+      // test render için
+      const fits = (paras) => {
+        renderParagraphs(paras);
+        return msgEl.scrollHeight <= msgFrame.clientHeight + 1;
+      };
+
+      // Eğer tek paragraf bile sığmıyorsa cümle bazlı bölelim
+      const splitIntoSentences = (para) => {
+        const parts = para.split(/(?<=[.!?…])\s+/).map(s => s.trim()).filter(Boolean);
+        return parts.length ? parts : [para];
+      };
+
+      // önce paragraf paragraf doldur
+      for (const para of paragraphs){
+        const candidate = [...current, para];
+        if (fits(candidate)) {
+          current = candidate;
+          continue;
+        }
+
+        // current doluysa sayfaya at
+        if (current.length) pages.push(current);
+
+        // bu paragraf tek başına sığmıyor olabilir -> cümle ile parçala
+        current = [];
+        if (fits([para])) {
+          current = [para];
+          continue;
+        }
+
+        // cümle cümle sığdır
+        const sentences = splitIntoSentences(para);
+        let temp = [];
+        for (const s of sentences){
+          const cand2 = [...temp, s];
+          if (fits(cand2)) temp = cand2;
+          else{
+            if (temp.length) pages.push(temp);
+            temp = [s];
+          }
+        }
+        current = temp;
       }
+
+      if (current.length) pages.push(current);
       return pages;
     }
 
-    // ---- Sayfa sistemi ----
-    let pages = [];
-    let pageIndex = 0;
-
-    function renderPage() {
-      const current = pages[pageIndex] || "";
-      msgEl.innerHTML = wrapEveryNWords(current, 5);
-
-      const total = pages.length;
-      if (total <= 1) {
-        pageIndicator.textContent = "";
-        btnNext.textContent = "Bitti";
-        btnNext.disabled = true;
-        return;
-      }
-
-      pageIndicator.textContent = `${pageIndex + 1} / ${total}`;
-
-      const isLast = pageIndex >= total - 1;
-      btnNext.textContent = isLast ? "Bitti" : "Devam";
-      btnNext.disabled = isLast;
-    }
-
+    // --- sound ---
     function hardStop(a){ try{ a.pause(); a.currentTime = 0; }catch{} }
 
-    // 1) İlk tık: yırtılma + hemen peşine kısa kağıt (1.8sn)
     function playRipThenPaper() {
       hardStop(sndRip);
       hardStop(sndPaper);
-
       sndRip.volume = 1.0;
       sndPaper.volume = 0.95;
 
@@ -290,7 +293,6 @@ Seni seviyorum,
       if (ripPlay && typeof ripPlay.catch === "function") ripPlay.catch(()=>{});
 
       let paperStarted = false;
-
       const startPaper = () => {
         if (paperStarted) return;
         paperStarted = true;
@@ -305,7 +307,6 @@ Seni seviyorum,
       setTimeout(startPaper, 350);
     }
 
-    // 2) Sayfa geçişinde kısa kağıt sesi (1.2sn)
     function playShortPaper() {
       hardStop(sndPaper);
       sndPaper.volume = 0.95;
@@ -313,48 +314,74 @@ Seni seviyorum,
       const p = sndPaper.play();
       if (p && typeof p.catch === "function") p.catch(()=>{});
 
-      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1200);
+      setTimeout(() => { try{ sndPaper.pause(); }catch{} }, 1100);
     }
 
-    function openLetter() {
+    // --- paging ---
+    let pages = [];
+    let pageIndex = 0;
+
+    function renderPage(){
+      const total = pages.length;
+      const paras = pages[pageIndex] || [];
+      renderParagraphs(paras);
+
+      if (total <= 1){
+        pageIndicator.textContent = "";
+        btnNext.textContent = "Bitti";
+        btnNext.disabled = true;
+        return;
+      }
+
+      pageIndicator.textContent = `${pageIndex + 1} / ${total}`;
+      const isLast = pageIndex >= total - 1;
+      btnNext.textContent = isLast ? "Bitti" : "Devam";
+      btnNext.disabled = isLast;
+    }
+
+    function buildPagesAndShowFirst(){
+      const paragraphs = splitParagraphs(LETTER_TEXT);
+      pages = paginateToFit(paragraphs);
+      pageIndex = 0;
+      renderPage();
+    }
+
+    function openLetter(){
       if (opened) return;
       opened = true;
 
       hint.textContent = "✨";
-
-      // sayfaları hazırla
-      pages = paginateByWords(LETTER_TEXT, 40);
-      pageIndex = 0;
-      renderPage();
-
       playRipThenPaper();
 
       setTimeout(() => {
         img1.classList.add("is-off");
         reveal.classList.add("is-on");
         reveal.setAttribute("aria-hidden", "false");
+
+        // ✅ Çerçeve ölçüsü hazır olunca sayfalara böl
+        requestAnimationFrame(() => {
+          buildPagesAndShowFirst();
+        });
       }, 420);
     }
 
-    function nextPage() {
+    function nextPage(){
       if (!opened) return;
-
       const isLast = pageIndex >= pages.length - 1;
       if (isLast) return;
-
       playShortPaper();
       pageIndex += 1;
       renderPage();
     }
 
-    function resetAll() {
+    function resetAll(){
       opened = false;
       hint.textContent = "Mektuba dokun ✨";
       img1.classList.remove("is-off");
       reveal.classList.remove("is-on");
       reveal.setAttribute("aria-hidden", "true");
       pageIndicator.textContent = "";
-      msgEl.textContent = "";
+      msgEl.innerHTML = "";
       btnNext.textContent = "Devam";
       btnNext.disabled = false;
       sndRip.onended = null;
@@ -363,16 +390,8 @@ Seni seviyorum,
     }
 
     scene.addEventListener("click", openLetter);
-
-    btnNext.addEventListener("click", (e) => {
-      e.stopPropagation();
-      nextPage();
-    });
-
-    btnReplay.addEventListener("click", (e) => {
-      e.stopPropagation();
-      resetAll();
-    });
+    btnNext.addEventListener("click", (e) => { e.stopPropagation(); nextPage(); });
+    btnReplay.addEventListener("click", (e) => { e.stopPropagation(); resetAll(); });
   </script>
 </body>
 </html>
